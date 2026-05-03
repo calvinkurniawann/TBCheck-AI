@@ -45,8 +45,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _navigateToNext() {
-    // Navigator.pushNamed(context, '/screening/data-diri');
-    print("Navigasi ke screen selanjutnya");
+    Navigator.pushNamed(context, '/screening');
   }
 
   @override

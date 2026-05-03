@@ -27,4 +27,14 @@ class AppColors {
   static const Color riskMediumBg = Color(0xFFFFFBEB);
   static const Color riskLow = Color(0xFF10B981);
   static const Color riskLowBg = Color(0xFFECFDF5);
+
+  // Accent
+  static const Color accentTeal = Color(0xFF0D9488);
+  static const Color accentTealLight = Color(0xFFCCFBF1);
+
+  // Additional
+  static const Color warningOrange = Color(0xFFF97316);
+  static const Color warningOrangeBg = Color(0xFFFFF7ED);
+  static const Color selectedBlueBg = Color(0xFFEFF6FF);
+  static const Color iconGray = Color(0xFF94A3B8);
 }

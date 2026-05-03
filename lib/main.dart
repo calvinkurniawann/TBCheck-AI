@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'core/constants/app_colors.dart';
 import 'core/constants/app_text_styles.dart';
 import 'screens/splash/splash_screen.dart';
+import 'screens/screening/screening_flow_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,7 +62,7 @@ class TBCheckApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
-        // Tambahkan route lain di sini nanti
+        '/screening': (context) => const ScreeningFlowScreen(),
       },
     );
   }
