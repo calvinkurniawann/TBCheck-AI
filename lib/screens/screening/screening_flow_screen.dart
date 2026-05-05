@@ -51,13 +51,7 @@ class _ScreeningFlowScreenState extends State<ScreeningFlowScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: AppColors.riskLowBg, borderRadius: BorderRadius.circular(10)),
-              child: const Icon(Icons.check_circle_rounded, color: AppColors.riskLow, size: 24),
-            ),
-            const SizedBox(width: 12),
-            const Text('Berhasil!', style: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w700)),
+            const Text('Berhasil!', style: TextStyle(fontFamily: 'Poppins', fontSize: 25, fontWeight: FontWeight.w700, )),
           ],
         ),
         content: Text(

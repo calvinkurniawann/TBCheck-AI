@@ -150,9 +150,6 @@ class _Step3FaktorRisikoState extends State<Step3FaktorRisiko> {
           const SizedBox(height: 28),
 
           PrimaryButton(label: 'Lanjut  →', onPressed: _handleNext),
-          const SizedBox(height: 16),
-          Center(child: Text('Simpan sebagai draf', style: AppTextStyles.caption.copyWith(color: AppColors.primaryMediumBlue, decoration: TextDecoration.underline))),
-          const SizedBox(height: 20),
         ],
       ),
     );
@@ -168,17 +165,17 @@ class _Step3FaktorRisikoState extends State<Step3FaktorRisiko> {
         decoration: BoxDecoration(
           color: isSelected ? AppColors.selectedBlueBg : AppColors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isSelected ? AppColors.primaryMediumBlue : AppColors.borderGray, width: isSelected ? 1.8 : 1.0),
+          border: Border.all(color: isSelected ? AppColors.primaryDarkBlue : AppColors.borderGray, width: isSelected ? 1.8 : 1.0),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primaryMediumBlue.withValues(alpha: 0.1) : AppColors.bgLightGray,
+                color: isSelected ? AppColors.primaryDarkBlue.withValues(alpha: 0.1) : AppColors.bgLightGray,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, size: 20, color: isSelected ? AppColors.primaryMediumBlue : AppColors.iconGray),
+              child: Icon(icon, size: 20, color: isSelected ? AppColors.primaryDarkBlue : AppColors.iconGray),
             ),
             const SizedBox(width: 12),
             Text(label, style: AppTextStyles.bodyMedium.copyWith(fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400, color: isSelected ? AppColors.primaryDarkBlue : AppColors.textDark)),

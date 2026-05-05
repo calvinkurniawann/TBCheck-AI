@@ -18,7 +18,7 @@ class ProgressHeader extends StatelessWidget implements PreferredSizeWidget {
   int get _percentage => (_progress * 100).round();
 
   @override
-  Size get preferredSize => const Size.fromHeight(100);
+  Size get preferredSize => const Size.fromHeight(130);
 
   @override
   Widget build(BuildContext context) {
@@ -51,17 +51,13 @@ class ProgressHeader extends StatelessWidget implements PreferredSizeWidget {
                   Expanded(
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryDarkBlue,
-                        borderRadius: BorderRadius.circular(24),
-                      ),
                       child: const Text(
                         'TBCheck AI',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 20,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.white,
+                          color: AppColors.primaryDarkBlue,
                           fontFamily: 'Poppins',
                         ),
                       ),

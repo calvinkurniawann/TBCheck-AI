@@ -203,34 +203,6 @@ class _Step1DataDiriState extends State<Step1DataDiri> {
 
           const SizedBox(height: 24),
 
-          // Info box
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.bgInfoBlue,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.primaryLightBlue),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.primaryMediumBlue),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Data ini digunakan oleh AI kami untuk memberikan hasil analisis yang lebih akurat sesuai dengan profil demografis Anda.',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.primaryDarkBlue,
-                      height: 1.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 32),
-
           // Lanjut button
           PrimaryButton(
             label: 'Lanjut  →',

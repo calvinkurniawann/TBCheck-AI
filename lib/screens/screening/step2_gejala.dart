@@ -61,9 +61,6 @@ class _Step2GejalaState extends State<Step2Gejala> {
         children: [
           // Q1: Durasi Batuk
           QuestionCard(
-            icon: Icons.masks_rounded,
-            iconColor: AppColors.primaryMediumBlue,
-            iconBgColor: AppColors.selectedBlueBg,
             title: 'Sudah berapa lama Anda mengalami batuk?',
             child: Column(children: [
               RadioOptionTile(label: 'Tidak ada', isSelected: _durasiBatuk == 'Tidak ada', onTap: () => setState(() => _durasiBatuk = 'Tidak ada')),
@@ -76,20 +73,17 @@ class _Step2GejalaState extends State<Step2Gejala> {
           // Q2: Frekuensi Demam
           QuestionCard(
             title: 'Seberapa sering Anda mengalami demam?',
-            child: _buildFrequencySelector(
-              currentValue: _frekuensiDemam,
-              options: ['Tidak pernah', 'Kadang-kadang', 'Sering'],
-              onChanged: (val) => setState(() => _frekuensiDemam = val),
-            ),
+            child: Column(children: [
+              RadioOptionTile(label: 'Tidak pernah', isSelected: _frekuensiDemam == 'Tidak pernah', onTap: () => setState(() =>_frekuensiDemam = 'Tidak pernah')),
+              RadioOptionTile(label: 'Kadang-kadang', isSelected: _frekuensiDemam == 'Kadang-kadang', onTap: () => setState(() => _frekuensiDemam = 'Kadang-kadang')),
+              RadioOptionTile(label: 'Sering', isSelected: _frekuensiDemam == 'Sering', onTap: () => setState(() => _frekuensiDemam = 'Sering')),
+            ]),
           ),
           const SizedBox(height: 28),
 
           // Q3: Keringat Malam
           QuestionCard(
             title: 'Keringat malam?',
-            icon: Icons.nightlight_round,
-            iconColor: AppColors.primaryDarkBlue,
-            iconBgColor: AppColors.primaryLightBlue,
             child: Column(children: [
               RadioOptionTile(label: 'Tidak', isSelected: _keringatMalam == 'Tidak', onTap: () => setState(() => _keringatMalam = 'Tidak')),
               RadioOptionTile(label: 'Kadang', isSelected: _keringatMalam == 'Kadang', onTap: () => setState(() => _keringatMalam = 'Kadang')),
@@ -101,9 +95,6 @@ class _Step2GejalaState extends State<Step2Gejala> {
           // Q4: Penurunan Berat Badan
           QuestionCard(
             title: 'Penurunan berat badan?',
-            icon: Icons.monitor_weight_outlined,
-            iconColor: AppColors.accentTeal,
-            iconBgColor: AppColors.accentTealLight,
             child: Column(children: [
               CheckboxOptionTile(label: 'Tidak', isSelected: _penurunanBB == 'Tidak', onTap: () => setState(() => _penurunanBB = 'Tidak')),
               CheckboxOptionTile(label: 'Sedikit', isSelected: _penurunanBB == 'Sedikit', onTap: () => setState(() => _penurunanBB = 'Sedikit')),
@@ -111,32 +102,7 @@ class _Step2GejalaState extends State<Step2Gejala> {
             ]),
           ),
           const SizedBox(height: 24),
-
-          // Footer info
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.bgInfoBlue,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.primaryLightBlue),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.lightbulb_outline_rounded, size: 18, color: AppColors.primaryMediumBlue),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Jawaban Anda membantu AI memberikan estimasi awal yang lebih akurat sebelum pemeriksaan medis lebih lanjut.',
-                    style: AppTextStyles.caption.copyWith(color: AppColors.primaryDarkBlue, height: 1.5),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 28),
           PrimaryButton(label: 'Lanjut  →', onPressed: _handleNext),
-          const SizedBox(height: 20),
         ],
       ),
     );

@@ -27,7 +27,7 @@ class CheckboxOptionTile extends StatelessWidget {
           color: isSelected ? AppColors.selectedBlueBg : AppColors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.primaryMediumBlue : AppColors.borderGray,
+            color: isSelected ? AppColors.primaryDarkBlue : AppColors.borderGray,
             width: isSelected ? 1.8 : 1.0,
           ),
         ),
@@ -39,9 +39,9 @@ class CheckboxOptionTile extends StatelessWidget {
               height: 22,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(6),
-                color: isSelected ? AppColors.primaryMediumBlue : Colors.transparent,
+                color: isSelected ? AppColors.primaryDarkBlue : Colors.transparent,
                 border: Border.all(
-                  color: isSelected ? AppColors.primaryMediumBlue : AppColors.borderGray,
+                  color: isSelected ? AppColors.primaryDarkBlue: AppColors.borderGray,
                   width: 2,
                 ),
               ),
