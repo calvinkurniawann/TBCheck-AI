@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-// Ganti 'namaproject' dengan nama package di pubspec.yaml kamu
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
 import '../../widgets/primary_button.dart';
-  
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -45,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _navigateToNext() {
-    Navigator.pushNamed(context, '/screening');
+    Navigator.pushReplacementNamed(context, '/home');
   }
 
   @override
@@ -54,7 +52,6 @@ class _SplashScreenState extends State<SplashScreen>
       backgroundColor: AppColors.bgLightGray,
       body: Stack(
         children: [
-          // Decorative blobs
           Positioned(
             top: -40,
             right: -40,
@@ -63,7 +60,19 @@ class _SplashScreenState extends State<SplashScreen>
               height: 180,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primaryDarkBlue.withValues(alpha: 0.1), // Gunakan withValues untuk Flutter terbaru
+                color: AppColors.primaryDarkBlue.withValues(alpha: 0.1),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -60,
+            left: -30,
+            child: Container(
+              width: 140,
+              height: 140,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.accentTeal.withValues(alpha: 0.08),
               ),
             ),
           ),
@@ -113,22 +122,44 @@ class _SplashScreenState extends State<SplashScreen>
                                   const SizedBox(width: 10),
                                   const Text(
                                     'TBCheck AI',
-                                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 24),
-                              // Placeholder Lung Icon
-                              const Icon(Icons.health_and_safety_rounded, size: 80, color: AppColors.primaryDarkBlue),
+                              const Icon(
+                                Icons.health_and_safety_rounded,
+                                size: 80,
+                                color: AppColors.primaryDarkBlue,
+                              ),
                               const SizedBox(height: 28),
                               const Text(
                                 'Skrining Berbasis\nAI',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Deteksi dini risiko TBC dengan teknologi kecerdasan buatan',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  color: AppColors.textGray,
+                                  height: 1.5,
+                                ),
                               ),
                               const SizedBox(height: 32),
                               PrimaryButton(
-                                label: 'Mulai Skrining  →',
+                                label: 'Mulai Sekarang  →',
                                 onPressed: _navigateToNext,
                               ),
                             ],

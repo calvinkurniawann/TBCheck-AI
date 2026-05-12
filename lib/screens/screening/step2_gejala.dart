@@ -2,139 +2,247 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../models/screening_data.dart';
+import '../../widgets/chip_selector.dart';
 import '../../widgets/question_card.dart';
-import '../../widgets/radio_option_tile.dart';
-import '../../widgets/checkbox_option_tile.dart';
 import '../../widgets/primary_button.dart';
 
-class Step2Gejala extends StatefulWidget {
+class Step2GejalaUtama extends StatefulWidget {
   final ScreeningData data;
   final VoidCallback onNext;
 
-  const Step2Gejala({super.key, required this.data, required this.onNext});
+  const Step2GejalaUtama({super.key, required this.data, required this.onNext});
 
   @override
-  State<Step2Gejala> createState() => _Step2GejalaState();
+  State<Step2GejalaUtama> createState() => _Step2GejalaUtamaState();
 }
 
-class _Step2GejalaState extends State<Step2Gejala> {
-  late String? _durasiBatuk;
-  late String? _frekuensiDemam;
-  late String? _keringatMalam;
-  late String? _penurunanBB;
+class _Step2GejalaUtamaState extends State<Step2GejalaUtama>
+    with SingleTickerProviderStateMixin {
+  String? _batukLama;
+  String? _batukDarah;
+  late AnimationController _animController;
+  late Animation<double> _fadeIn;
 
   @override
   void initState() {
     super.initState();
-    _durasiBatuk = widget.data.durasiBatuk;
-    _frekuensiDemam = widget.data.frekuensiDemam;
-    _keringatMalam = widget.data.keringatMalam;
-    _penurunanBB = widget.data.penurunanBeratBadan;
+    if (widget.data.batukLama != null) {
+      _batukLama = widget.data.batukLama! ? 'Ya' : 'Tidak';
+    }
+    if (widget.data.batukDarah != null) {
+      _batukDarah = widget.data.batukDarah! ? 'Ya' : 'Tidak';
+    }
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _fadeIn = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _animController.forward();
   }
 
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  bool get _showBatukDarah => _batukLama == 'Ya';
+
   void _handleNext() {
-    if (_durasiBatuk == null || _frekuensiDemam == null ||
-        _keringatMalam == null || _penurunanBB == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Mohon jawab semua pertanyaan'),
-          backgroundColor: AppColors.riskHigh,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
+    if (_batukLama == null) {
+      _showError('Mohon jawab pertanyaan batuk');
       return;
     }
-    widget.data.durasiBatuk = _durasiBatuk;
-    widget.data.frekuensiDemam = _frekuensiDemam;
-    widget.data.keringatMalam = _keringatMalam;
-    widget.data.penurunanBeratBadan = _penurunanBB;
+    if (_showBatukDarah && _batukDarah == null) {
+      _showError('Mohon jawab pertanyaan batuk darah');
+      return;
+    }
+    widget.data.batukLama = _batukLama == 'Ya';
+    widget.data.batukDarah = _showBatukDarah ? (_batukDarah == 'Ya') : false;
     widget.onNext();
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: AppColors.riskHigh,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    return FadeTransition(
+      opacity: _fadeIn,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(),
+            const SizedBox(height: 28),
+            _buildBatukLamaCard(),
+            _buildConditionalBatukDarah(),
+            const SizedBox(height: 24),
+            _buildInfoBox(),
+            const SizedBox(height: 28),
+            PrimaryButton(label: 'Lanjut  →', onPressed: _handleNext),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.accentTeal,
+            AppColors.accentTeal.withValues(alpha: 0.85),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Q1: Durasi Batuk
-          QuestionCard(
-            title: 'Sudah berapa lama Anda mengalami batuk?',
-            child: Column(children: [
-              RadioOptionTile(label: 'Tidak ada', isSelected: _durasiBatuk == 'Tidak ada', onTap: () => setState(() => _durasiBatuk = 'Tidak ada')),
-              RadioOptionTile(label: '< 2 minggu', isSelected: _durasiBatuk == '< 2 minggu', onTap: () => setState(() => _durasiBatuk = '< 2 minggu')),
-              RadioOptionTile(label: '> 2 minggu', isSelected: _durasiBatuk == '> 2 minggu', onTap: () => setState(() => _durasiBatuk = '> 2 minggu')),
-            ]),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.coronavirus_outlined, color: AppColors.white, size: 24),
           ),
-          const SizedBox(height: 28),
-
-          // Q2: Frekuensi Demam
-          QuestionCard(
-            title: 'Seberapa sering Anda mengalami demam?',
-            child: Column(children: [
-              RadioOptionTile(label: 'Tidak pernah', isSelected: _frekuensiDemam == 'Tidak pernah', onTap: () => setState(() =>_frekuensiDemam = 'Tidak pernah')),
-              RadioOptionTile(label: 'Kadang-kadang', isSelected: _frekuensiDemam == 'Kadang-kadang', onTap: () => setState(() => _frekuensiDemam = 'Kadang-kadang')),
-              RadioOptionTile(label: 'Sering', isSelected: _frekuensiDemam == 'Sering', onTap: () => setState(() => _frekuensiDemam = 'Sering')),
-            ]),
+          const SizedBox(height: 14),
+          const Text(
+            'Gejala Utama',
+            style: TextStyle(fontFamily: 'Poppins', fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.white),
           ),
-          const SizedBox(height: 28),
-
-          // Q3: Keringat Malam
-          QuestionCard(
-            title: 'Keringat malam?',
-            child: Column(children: [
-              RadioOptionTile(label: 'Tidak', isSelected: _keringatMalam == 'Tidak', onTap: () => setState(() => _keringatMalam = 'Tidak')),
-              RadioOptionTile(label: 'Kadang', isSelected: _keringatMalam == 'Kadang', onTap: () => setState(() => _keringatMalam = 'Kadang')),
-              RadioOptionTile(label: 'Sering', isSelected: _keringatMalam == 'Sering', onTap: () => setState(() => _keringatMalam = 'Sering')),
-            ]),
+          const SizedBox(height: 6),
+          Text(
+            'Pertanyaan ini fokus pada gejala batuk yang merupakan indikator utama TBC.',
+            style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppColors.white.withValues(alpha: 0.85), height: 1.5),
           ),
-          const SizedBox(height: 28),
-
-          // Q4: Penurunan Berat Badan
-          QuestionCard(
-            title: 'Penurunan berat badan?',
-            child: Column(children: [
-              CheckboxOptionTile(label: 'Tidak', isSelected: _penurunanBB == 'Tidak', onTap: () => setState(() => _penurunanBB = 'Tidak')),
-              CheckboxOptionTile(label: 'Sedikit', isSelected: _penurunanBB == 'Sedikit', onTap: () => setState(() => _penurunanBB = 'Sedikit')),
-              CheckboxOptionTile(label: 'Signifikan', isSelected: _penurunanBB == 'Signifikan', onTap: () => setState(() => _penurunanBB = 'Signifikan')),
-            ]),
-          ),
-          const SizedBox(height: 24),
-          PrimaryButton(label: 'Lanjut  →', onPressed: _handleNext),
         ],
       ),
     );
   }
 
-  Widget _buildFrequencySelector({required String? currentValue, required List<String> options, required ValueChanged<String> onChanged}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: options.map((option) {
-          final isSelected = currentValue == option;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => onChanged(option),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primaryDarkBlue : AppColors.bgInput,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: isSelected ? AppColors.primaryDarkBlue : AppColors.borderGray),
-                ),
-                child: Text(
-                  option,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontFamily: 'Poppins', fontSize: 11, fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400, color: isSelected ? AppColors.white : AppColors.textGray),
+  Widget _buildBatukLamaCard() {
+    return QuestionCard(
+      icon: Icons.sick_outlined,
+      iconColor: AppColors.warningOrange,
+      iconBgColor: AppColors.warningOrangeBg,
+      title: 'Apakah Anda mengalami batuk terus-menerus atau berdahak selama ≥ 3 minggu?',
+      subtitle: 'Batuk yang tidak kunjung sembuh merupakan gejala khas TBC paru.',
+      child: ChipSelector(
+        options: const [
+          ChipOption(label: 'Ya', value: 'Ya', icon: Icons.check_circle_outline),
+          ChipOption(label: 'Tidak', value: 'Tidak', icon: Icons.cancel_outlined),
+        ],
+        selectedValue: _batukLama,
+        onSelected: (val) {
+          setState(() {
+            _batukLama = val;
+            if (val == 'Tidak') _batukDarah = null;
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _buildConditionalBatukDarah() {
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOut,
+      child: _showBatukDarah
+          ? Padding(
+              padding: const EdgeInsets.only(top: 20),
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 300),
+                opacity: 1.0,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.riskHighBg,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.riskHigh.withValues(alpha: 0.3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppColors.riskHigh.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.bloodtype_outlined, color: AppColors.riskHigh, size: 18),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Batuk Darah (Hemoptisis)', style: AppTextStyles.heading3.copyWith(fontSize: 14, color: AppColors.riskHigh)),
+                                const SizedBox(height: 2),
+                                Text('Pernahkah batuk Anda disertai darah?', style: AppTextStyles.caption),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      ChipSelector(
+                        options: [
+                          ChipOption(label: 'Ya', value: 'Ya', icon: Icons.check_circle_outline, selectedColor: AppColors.riskHigh),
+                          ChipOption(label: 'Tidak', value: 'Tidak', icon: Icons.cancel_outlined, selectedColor: AppColors.riskLow),
+                        ],
+                        selectedValue: _batukDarah,
+                        onSelected: (val) => setState(() => _batukDarah = val),
+                      ),
+                    ],
+                  ),
                 ),
               ),
+            )
+          : const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildInfoBox() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.bgInfoBlue,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primaryLightBlue),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.lightbulb_outline_rounded, size: 18, color: AppColors.primaryMediumBlue),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Batuk berkepanjangan (≥ 3 minggu) yang disertai dahak atau darah merupakan salah satu tanda utama tuberkulosis.',
+              style: AppTextStyles.caption.copyWith(color: AppColors.primaryDarkBlue, height: 1.5),
             ),
-          );
-        }).toList(),
+          ),
+        ],
       ),
     );
   }

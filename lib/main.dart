@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'core/constants/app_colors.dart';
-import 'core/constants/app_text_styles.dart';
 import 'screens/splash/splash_screen.dart';
+import 'screens/main/main_nav_screen.dart';
 import 'screens/screening/screening_flow_screen.dart';
 
 void main() {
@@ -41,7 +41,6 @@ class TBCheckApp extends StatelessWidget {
           backgroundColor: AppColors.white,
           elevation: 0,
           iconTheme: IconThemeData(color: AppColors.primaryDarkBlue),
-          // PERBAIKAN: Rapikan struktur titleTextStyle
           titleTextStyle: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -62,6 +61,7 @@ class TBCheckApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
+        '/home': (context) => const MainNavScreen(),
         '/screening': (context) => const ScreeningFlowScreen(),
       },
     );

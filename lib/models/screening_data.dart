@@ -1,36 +1,50 @@
 class ScreeningData {
-  // Step 1: Data Diri
-  int? umur;
-  String? jenisKelamin; // 'Laki-laki' / 'Perempuan'
+  int? usia;
+  String? jenisKelamin;
+  double? tinggiBadan;
+  double? beratBadan;
 
-  // Step 2: Gejala
-  String? durasiBatuk; // 'Tidak ada' / '< 2 minggu' / '> 2 minggu'
-  String? frekuensiDemam; // 'Tidak pernah' / 'Kadang-kadang' / 'Sering'
-  String? keringatMalam; // 'Tidak' / 'Kadang' / 'Sering'
-  String? penurunanBeratBadan; // 'Tidak' / 'Sedikit' / 'Signifikan'
+  bool? batukLama;
+  bool? batukDarah;
 
-  // Step 3: Faktor Risiko
-  bool? kontakPasienTBC;
-  String? lingkunganTempatTinggal; // 'Tidak padat' / 'Cukup padat' / 'Padat & Kumuh'
-  bool? merokok;
+  List<String> gejalaSistemik = [];
 
-  // Step 4: Keluhan Tambahan
-  String? keluhanTambahan;
+  List<String> faktorLingkungan = [];
+
+  List<String> gayaHidupKomorbid = [];
 
   ScreeningData();
 
+  double? get bmi {
+    if (tinggiBadan != null && beratBadan != null && tinggiBadan! > 0) {
+      final heightM = tinggiBadan! / 100;
+      return beratBadan! / (heightM * heightM);
+    }
+    return null;
+  }
+
+  String get bmiCategory {
+    final val = bmi;
+    if (val == null) return '-';
+    if (val < 18.5) return 'Kurus';
+    if (val < 25.0) return 'Normal';
+    if (val < 30.0) return 'Gemuk';
+    return 'Obesitas';
+  }
+
   Map<String, dynamic> toMap() {
     return {
-      'umur': umur,
+      'usia': usia,
       'jenisKelamin': jenisKelamin,
-      'durasiBatuk': durasiBatuk,
-      'frekuensiDemam': frekuensiDemam,
-      'keringatMalam': keringatMalam,
-      'penurunanBeratBadan': penurunanBeratBadan,
-      'kontakPasienTBC': kontakPasienTBC,
-      'lingkunganTempatTinggal': lingkunganTempatTinggal,
-      'merokok': merokok,
-      'keluhanTambahan': keluhanTambahan,
+      'tinggiBadan': tinggiBadan,
+      'beratBadan': beratBadan,
+      'bmi': bmi,
+      'bmiCategory': bmiCategory,
+      'batukLama': batukLama,
+      'batukDarah': batukDarah,
+      'gejalaSistemik': gejalaSistemik,
+      'faktorLingkungan': faktorLingkungan,
+      'gayaHidupKomorbid': gayaHidupKomorbid,
     };
   }
 }

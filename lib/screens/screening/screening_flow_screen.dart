@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../models/screening_data.dart';
 import '../../widgets/progress_header.dart';
-import '../../widgets/bottom_nav_bar.dart';
+
 import 'step1_data_diri.dart';
 import 'step2_gejala.dart';
 import 'step3_faktor_risiko.dart';
@@ -44,14 +44,25 @@ class _ScreeningFlowScreenState extends State<ScreeningFlowScreen> {
   }
 
   void _onSubmit() {
-    // Show success dialog with screening data summary
+    final dataMap = _screeningData.toMap();
+    debugPrint('Screening Data: $dataMap');
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            const Text('Berhasil!', style: TextStyle(fontFamily: 'Poppins', fontSize: 25, fontWeight: FontWeight.w700, )),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.riskLow.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.check_circle_rounded, color: AppColors.riskLow, size: 24),
+            ),
+            const SizedBox(width: 12),
+            const Text('Berhasil!', style: TextStyle(fontFamily: 'Poppins', fontSize: 22, fontWeight: FontWeight.w700)),
           ],
         ),
         content: Text(
@@ -100,12 +111,12 @@ class _ScreeningFlowScreenState extends State<ScreeningFlowScreen> {
         onPageChanged: (index) => setState(() => _currentStep = index + 1),
         children: [
           Step1DataDiri(data: _screeningData, onNext: _nextStep),
-          Step2Gejala(data: _screeningData, onNext: _nextStep),
-          Step3FaktorRisiko(data: _screeningData, onNext: _nextStep),
-          Step4KeluhanTambahan(data: _screeningData, onSubmit: _onSubmit),
+          Step2GejalaUtama(data: _screeningData, onNext: _nextStep),
+          Step3GejalaSistemik(data: _screeningData, onNext: _nextStep),
+          Step4LingkunganRisiko(data: _screeningData, onSubmit: _onSubmit),
         ],
       ),
-      bottomNavigationBar: BottomNavBar(currentIndex: 1),
+
     );
   }
 }
