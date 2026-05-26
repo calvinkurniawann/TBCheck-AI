@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../home/home_screen.dart';
 import '../history/history_screen.dart';
-import '../clinic/clinic_screen.dart';
+// import '../clinic/clinic_screen.dart';
 import '../profile/profile_screen.dart';
 
 class MainNavScreen extends StatefulWidget {
@@ -30,8 +30,8 @@ class _MainNavScreenState extends State<MainNavScreen> {
         );
       case 1:
         return const HistoryScreen();
-      case 2:
-        return const ClinicScreen();
+      // case 2:
+      //   return const ClinicScreen();
       case 3:
         return const ProfileScreen();
       default:
@@ -80,11 +80,11 @@ class _MainNavScreenState extends State<MainNavScreen> {
                 index: 0,
               ),
               _buildCenterNavItem(),
-              _buildNavItem(
-                icon: Icons.local_hospital_rounded,
-                label: 'Klinik',
-                index: 2,
-              ),
+              // _buildNavItem(
+              //   icon: Icons.local_hospital_rounded,
+              //   label: 'Klinik',
+              //   index: 2,
+              // ),
               _buildNavItem(
                 icon: Icons.person_rounded,
                 label: 'Profil',

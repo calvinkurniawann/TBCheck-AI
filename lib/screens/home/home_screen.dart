@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
+import '../../core/services/screening_api_service.dart';
+import '../../core/services/auth_service.dart';
 import '../../models/screening_history.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -16,7 +18,12 @@ class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   late Animation<double> _fadeIn;
-  final _histories = ScreeningHistory.mockData();
+  final ScreeningApiService _apiService = ScreeningApiService();
+
+  List<ScreeningHistory> _histories = [];
+  final AuthService _authService = AuthService();
+  UserData? _currentUser;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -27,12 +34,44 @@ class _HomeScreenState extends State<HomeScreen>
     );
     _fadeIn = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _animController.forward();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final user = await _authService.getSavedUser();
+    if (mounted) {
+      setState(() {
+        _currentUser = user;
+      });
+    }
+    await _loadHistory();
   }
 
   @override
   void dispose() {
     _animController.dispose();
+    _apiService.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadHistory() async {
+    try {
+      final apiItems = await _apiService.getHistory();
+      if (!mounted) return;
+      setState(() {
+        _histories = apiItems
+            .map((item) => ScreeningHistory.fromApi(item))
+            .toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      debugPrint('[Home] Failed to load history: $e');
+      setState(() {
+        _histories = ScreeningHistory.mockData();
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -52,6 +91,11 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildSliverHeader() {
+    final latest = _histories.isNotEmpty ? _histories.first : null;
+    final statusText = latest != null
+        ? 'Status terakhir: ${latest.riskLabel} • ${latest.timeAgo}'
+        : 'Belum ada skrining';
+
     return SliverAppBar(
       expandedHeight: 200,
       floating: false,
@@ -99,15 +143,15 @@ class _HomeScreenState extends State<HomeScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Selamat Siang! 👋',
+                                'Selamat Datang! 👋',
                                 style: TextStyle(
                                   fontFamily: 'Poppins',
                                   fontSize: 12,
                                   color: AppColors.white.withValues(alpha: 0.7),
                                 ),
                               ),
-                              const Text(
-                                'Halo, Calvin!',
+                              Text(
+                                'Halo, ${_currentUser?.name ?? 'Pengguna'}!',
                                 style: TextStyle(
                                   fontFamily: 'Poppins',
                                   fontSize: 18,
@@ -166,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen>
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Status terakhir: Risiko Rendah • 2 hari lalu',
+                            statusText,
                             style: TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 12,
@@ -294,13 +338,22 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildQuickStats() {
+    final latestStatus = _histories.isNotEmpty
+        ? (_histories.first.riskLevel == RiskLevel.rendah ? 'Aman' : 'Waspada')
+        : '-';
+    final statusColor = _histories.isNotEmpty
+        ? (_histories.first.riskLevel == RiskLevel.rendah
+            ? AppColors.riskLow
+            : _histories.first.riskColor)
+        : AppColors.iconGray;
+
     return Row(
       children: [
         Expanded(
           child: _buildStatCard(
             icon: Icons.fact_check_rounded,
             label: 'Total Skrining',
-            value: '${_histories.length}',
+            value: _isLoading ? '...' : '${_histories.length}',
             color: AppColors.primaryMediumBlue,
           ),
         ),
@@ -309,8 +362,8 @@ class _HomeScreenState extends State<HomeScreen>
           child: _buildStatCard(
             icon: Icons.shield_rounded,
             label: 'Status Saat Ini',
-            value: 'Aman',
-            color: AppColors.riskLow,
+            value: _isLoading ? '...' : latestStatus,
+            color: statusColor,
           ),
         ),
       ],
@@ -389,7 +442,23 @@ class _HomeScreenState extends State<HomeScreen>
           ],
         ),
         const SizedBox(height: 8),
-        if (latest != null)
+        if (_isLoading)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.borderGray),
+            ),
+            child: const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation(AppColors.accentTeal),
+                strokeWidth: 2,
+              ),
+            ),
+          )
+        else if (latest != null)
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),

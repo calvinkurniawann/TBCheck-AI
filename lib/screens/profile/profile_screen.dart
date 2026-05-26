@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
+import '../../core/services/auth_service.dart';
+import '../history/history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -13,6 +15,9 @@ class _ProfileScreenState extends State<ProfileScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   late Animation<double> _fadeIn;
+  final AuthService _authService = AuthService();
+  UserData? _currentUser;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -23,6 +28,27 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
     _fadeIn = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _animController.forward();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final user = await _authService.getProfile();
+      if (mounted) setState(() => _currentUser = user);
+    } catch (e) {
+      if (mounted) {
+        final user = await _authService.getSavedUser();
+        setState(() => _currentUser = user);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _logout() async {
+    await _authService.logout();
+    if (!mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
   }
 
   @override
@@ -100,9 +126,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                     child: CircleAvatar(
                       radius: 37,
                       backgroundColor: AppColors.primaryMediumBlue.withValues(alpha: 0.3),
-                      child: const Text(
-                        'CK',
-                        style: TextStyle(
+                      child: Text(
+                        _currentUser?.initials ?? '?',
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 28,
                           fontWeight: FontWeight.w700,
@@ -112,9 +138,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                     ),
                   ),
                   const SizedBox(height: 14),
-                  const Text(
-                    'Calvin Kurniawan',
-                    style: TextStyle(
+                  Text(
+                    _currentUser?.name ?? 'Memuat...',
+                    style: const TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
@@ -131,11 +157,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.verified_rounded, size: 14, color: AppColors.riskLow),
+                        const Icon(Icons.verified_rounded, size: 14, color: AppColors.riskLow),
                         const SizedBox(width: 4),
                         Text(
-                          'Status: Risiko Rendah',
-                          style: TextStyle(
+                          _currentUser?.email ?? '',
+                          style: const TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
@@ -174,6 +200,28 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildDemographicsGrid() {
+    // Calculate BMI
+    String bmiText = '-';
+    Color bmiColor = AppColors.iconGray;
+    
+    if (_currentUser?.beratBadan != null && _currentUser?.tinggiBadan != null) {
+      final tbM = _currentUser!.tinggiBadan! / 100;
+      final bmi = _currentUser!.beratBadan! / (tbM * tbM);
+      if (bmi < 18.5) {
+        bmiText = '${bmi.toStringAsFixed(1)} (Kurus)';
+        bmiColor = AppColors.warningOrange;
+      } else if (bmi < 25) {
+        bmiText = '${bmi.toStringAsFixed(1)} (Normal)';
+        bmiColor = AppColors.riskLow;
+      } else if (bmi < 30) {
+        bmiText = '${bmi.toStringAsFixed(1)} (Gemuk)';
+        bmiColor = AppColors.riskMedium;
+      } else {
+        bmiText = '${bmi.toStringAsFixed(1)} (Obesitas)';
+        bmiColor = AppColors.riskHigh;
+      }
+    }
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -209,21 +257,21 @@ class _ProfileScreenState extends State<ProfileScreen>
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: _buildDemoItem(Icons.cake_rounded, 'Usia', '21 tahun', AppColors.primaryMediumBlue)),
+              Expanded(child: _buildDemoItem(Icons.cake_rounded, 'Usia', _currentUser?.usia != null ? '${_currentUser!.usia} tahun' : '-', AppColors.primaryMediumBlue)),
               const SizedBox(width: 12),
-              Expanded(child: _buildDemoItem(Icons.male_rounded, 'Gender', 'Laki-laki', AppColors.accentTeal)),
+              Expanded(child: _buildDemoItem(Icons.male_rounded, 'Gender', _currentUser?.jenisKelamin ?? '-', AppColors.accentTeal)),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: _buildDemoItem(Icons.height_rounded, 'Tinggi', '175 cm', AppColors.riskMedium)),
+              Expanded(child: _buildDemoItem(Icons.height_rounded, 'Tinggi', _currentUser?.tinggiBadan != null ? '${_currentUser!.tinggiBadan} cm' : '-', AppColors.riskMedium)),
               const SizedBox(width: 12),
-              Expanded(child: _buildDemoItem(Icons.monitor_weight_outlined, 'Berat', '68 kg', AppColors.riskLow)),
+              Expanded(child: _buildDemoItem(Icons.monitor_weight_outlined, 'Berat', _currentUser?.beratBadan != null ? '${_currentUser!.beratBadan} kg' : '-', AppColors.riskLow)),
             ],
           ),
           const SizedBox(height: 12),
-          _buildDemoItem(Icons.speed_rounded, 'BMI', '22.2 (Normal)', AppColors.riskLow),
+          _buildDemoItem(Icons.speed_rounded, 'BMI', bmiText, bmiColor),
         ],
       ),
     );
@@ -273,12 +321,12 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Widget _buildMenuSection() {
     final menuItems = [
-      _MenuItem(Icons.edit_rounded, 'Edit Profil', AppColors.primaryMediumBlue),
+      // _MenuItem(Icons.edit_rounded, 'Edit Profil', AppColors.primaryMediumBlue),
       _MenuItem(Icons.history_rounded, 'Riwayat Skrining', AppColors.accentTeal),
-      _MenuItem(Icons.language_rounded, 'Ganti Bahasa', AppColors.riskMedium),
-      _MenuItem(Icons.notifications_outlined, 'Notifikasi', AppColors.warningOrange),
-      _MenuItem(Icons.help_outline_rounded, 'Bantuan & FAQ', AppColors.primaryDarkBlue),
-      _MenuItem(Icons.privacy_tip_outlined, 'Kebijakan Privasi', AppColors.textGray),
+      // _MenuItem(Icons.language_rounded, 'Ganti Bahasa', AppColors.riskMedium),
+      // _MenuItem(Icons.notifications_outlined, 'Notifikasi', AppColors.warningOrange),
+      // _MenuItem(Icons.help_outline_rounded, 'Bantuan & FAQ', AppColors.primaryDarkBlue),
+      // _MenuItem(Icons.privacy_tip_outlined, 'Kebijakan Privasi', AppColors.textGray),
     ];
 
     return Container(
@@ -308,7 +356,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                       : idx == menuItems.length - 1
                           ? const BorderRadius.vertical(bottom: Radius.circular(18))
                           : BorderRadius.zero,
-                  onTap: () {},
+                  onTap: () {
+                    if (item.label == 'Riwayat Skrining') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const HistoryScreen()),
+                      );
+                    }
+                  },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                     child: Row(
@@ -365,7 +420,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         borderRadius: BorderRadius.circular(18),
         child: InkWell(
           borderRadius: BorderRadius.circular(18),
-          onTap: () {},
+          onTap: _logout,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: Row(

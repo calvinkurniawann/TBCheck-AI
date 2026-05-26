@@ -5,6 +5,7 @@ import '../../core/constants/app_text_styles.dart';
 import '../../models/screening_data.dart';
 import '../../widgets/chip_selector.dart';
 import '../../widgets/primary_button.dart';
+import '../../core/services/auth_service.dart';
 
 class Step1DataDiri extends StatefulWidget {
   final ScreeningData data;
@@ -48,6 +49,31 @@ class _Step1DataDiriState extends State<Step1DataDiri> with SingleTickerProvider
     );
     _fadeIn = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _animController.forward();
+    
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    // Only autofill if data is currently empty
+    if (widget.data.usia != null) return;
+    
+    final authService = AuthService();
+    final user = await authService.getSavedUser();
+    
+    if (user != null && mounted) {
+      setState(() {
+        if (user.usia != null) _usiaController.text = user.usia.toString();
+        if (user.tinggiBadan != null) _tinggiController.text = user.tinggiBadan.toString();
+        if (user.beratBadan != null) _beratController.text = user.beratBadan.toString();
+        if (user.jenisKelamin != null) _jenisKelamin = user.jenisKelamin;
+        
+        // Update model
+        widget.data.usia = user.usia;
+        widget.data.tinggiBadan = user.tinggiBadan;
+        widget.data.beratBadan = user.beratBadan;
+        widget.data.jenisKelamin = user.jenisKelamin;
+      });
+    }
   }
 
   @override

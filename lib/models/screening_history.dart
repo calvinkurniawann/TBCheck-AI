@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
+import '../core/services/screening_api_service.dart';
 
 enum RiskLevel { rendah, sedang, tinggi }
 
@@ -10,6 +11,7 @@ class ScreeningHistory {
   final double riskScore;
   final int gejalaTerdeteksi;
   final int faktorRisiko;
+  final List<String>? selectedSymptoms;
 
   const ScreeningHistory({
     required this.id,
@@ -18,7 +20,33 @@ class ScreeningHistory {
     required this.riskScore,
     required this.gejalaTerdeteksi,
     required this.faktorRisiko,
+    this.selectedSymptoms,
   });
+
+  /// Create from API response item
+  factory ScreeningHistory.fromApi(ScreeningHistoryItem item) {
+    RiskLevel level;
+    switch (item.riskLevel) {
+      case 'Tinggi':
+        level = RiskLevel.tinggi;
+        break;
+      case 'Sedang':
+        level = RiskLevel.sedang;
+        break;
+      default:
+        level = RiskLevel.rendah;
+    }
+
+    return ScreeningHistory(
+      id: item.id.toString(),
+      date: item.createdAt,
+      riskLevel: level,
+      riskScore: item.cfScorePercentage,
+      gejalaTerdeteksi: item.gejalaTerdeteksi,
+      faktorRisiko: item.faktorRisiko,
+      selectedSymptoms: item.selectedSymptoms,
+    );
+  }
 
   String get riskLabel {
     switch (riskLevel) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
+import '../../core/services/screening_api_service.dart';
 import '../../models/screening_history.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -12,9 +13,13 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen>
     with SingleTickerProviderStateMixin {
-  final _histories = ScreeningHistory.mockData();
   late AnimationController _animController;
   late Animation<double> _fadeIn;
+  final ScreeningApiService _apiService = ScreeningApiService();
+
+  List<ScreeningHistory> _histories = [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -25,12 +30,50 @@ class _HistoryScreenState extends State<HistoryScreen>
     );
     _fadeIn = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _animController.forward();
+    _loadHistory();
   }
 
   @override
   void dispose() {
     _animController.dispose();
+    _apiService.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadHistory() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final apiItems = await _apiService.getHistory();
+      if (!mounted) return;
+
+      setState(() {
+        _histories = apiItems
+            .map((item) => ScreeningHistory.fromApi(item))
+            .toList();
+        _isLoading = false;
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      debugPrint('[History] API Error: ${e.message}');
+      setState(() {
+        _errorMessage = e.message;
+        _isLoading = false;
+        // Fallback to mock data if API fails
+        _histories = ScreeningHistory.mockData();
+      });
+    } catch (e) {
+      if (!mounted) return;
+      debugPrint('[History] Error: $e');
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+        _histories = ScreeningHistory.mockData();
+      });
+    }
   }
 
   @override
@@ -42,8 +85,19 @@ class _HistoryScreenState extends State<HistoryScreen>
         child: CustomScrollView(
           slivers: [
             _buildHeader(),
-            _buildSummaryBar(),
-            _buildHistoryList(),
+            if (_errorMessage != null) _buildErrorBanner(),
+            if (_isLoading)
+              const SliverFillRemaining(
+                child: Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation(AppColors.accentTeal),
+                  ),
+                ),
+              )
+            else ...[
+              _buildSummaryBar(),
+              _buildHistoryList(),
+            ],
             const SliverToBoxAdapter(child: SizedBox(height: 20)),
           ],
         ),
@@ -93,6 +147,19 @@ class _HistoryScreenState extends State<HistoryScreen>
                           color: AppColors.white,
                         ),
                       ),
+                      const Spacer(),
+                      // Refresh button
+                      GestureDetector(
+                        onTap: _loadHistory,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.refresh_rounded, color: AppColors.white, size: 20),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -109,6 +176,41 @@ class _HistoryScreenState extends State<HistoryScreen>
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorBanner() {
+    return SliverToBoxAdapter(
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.warningOrangeBg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.warningOrange.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.wifi_off_rounded, size: 18, color: AppColors.warningOrange),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Tidak dapat terhubung ke server. Menampilkan data contoh.',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 12,
+                  color: AppColors.warningOrange,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: _loadHistory,
+              child: const Icon(Icons.refresh_rounded, size: 18, color: AppColors.warningOrange),
+            ),
+          ],
         ),
       ),
     );
