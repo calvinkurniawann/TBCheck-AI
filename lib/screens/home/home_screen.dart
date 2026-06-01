@@ -101,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen>
     return SliverAppBar(
       expandedHeight: 130,
       floating: false,
-      pinned: true,
+      pinned: false,
       automaticallyImplyLeading: false,
       backgroundColor: AppColors.primaryDarkBlue,
       flexibleSpace: FlexibleSpaceBar(
