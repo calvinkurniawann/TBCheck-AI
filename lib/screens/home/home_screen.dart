@@ -4,6 +4,8 @@ import '../../core/constants/app_text_styles.dart';
 import '../../core/services/screening_api_service.dart';
 import '../../core/services/auth_service.dart';
 import '../../models/screening_history.dart';
+import '../history/history_detail_screen.dart';
+import '../history/history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback onStartScreening;
@@ -97,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen>
         : 'Belum ada skrining';
 
     return SliverAppBar(
-      expandedHeight: 200,
+      expandedHeight: 130,
       floating: false,
       pinned: true,
       automaticallyImplyLeading: false,
@@ -116,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -193,7 +195,7 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
@@ -428,7 +430,11 @@ class _HomeScreenState extends State<HomeScreen>
           children: [
             Text('Skrining Terakhir', style: AppTextStyles.heading3),
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const HistoryScreen()),
+                );
+              },
               child: Text(
                 'Lihat Semua',
                 style: TextStyle(
@@ -461,7 +467,6 @@ class _HomeScreenState extends State<HomeScreen>
         else if (latest != null)
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppColors.white,
               borderRadius: BorderRadius.circular(16),
@@ -474,8 +479,22 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ],
             ),
-            child: Row(
-              children: [
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => HistoryDetailScreen(history: latest),
+                    ),
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
                 Container(
                   width: 48,
                   height: 48,
@@ -512,7 +531,10 @@ class _HomeScreenState extends State<HomeScreen>
                   size: 16,
                   color: AppColors.iconGray,
                 ),
-              ],
+                    ],
+                  ),
+                ),
+              ),
             ),
           )
         else

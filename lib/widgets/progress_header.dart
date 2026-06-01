@@ -63,8 +63,6 @@ class ProgressHeader extends StatelessWidget implements PreferredSizeWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Icon(Icons.more_vert, color: AppColors.primaryDarkBlue.withValues(alpha: 0.6)),
                 ],
               ),
               const SizedBox(height: 10),
