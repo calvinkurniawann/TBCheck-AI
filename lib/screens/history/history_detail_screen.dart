@@ -74,7 +74,7 @@ class HistoryDetailScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${history.timeAgo} â€¢ Skor: ${history.riskScore.toStringAsFixed(0)}%',
+                        '${history.timeAgo} • Skor: ${history.riskScore.toStringAsFixed(0)}%',
                         style: AppTextStyles.caption,
                       ),
                     ],
