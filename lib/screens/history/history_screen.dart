@@ -3,6 +3,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/services/screening_api_service.dart';
 import '../../models/screening_history.dart';
+import 'history_detail_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -107,77 +108,36 @@ class _HistoryScreenState extends State<HistoryScreen>
 
   Widget _buildHeader() {
     return SliverAppBar(
-      expandedHeight: 140,
+      expandedHeight: kToolbarHeight,
       floating: false,
       pinned: true,
-      automaticallyImplyLeading: false,
-      backgroundColor: AppColors.primaryDarkBlue,
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppColors.primaryDarkBlue, Color(0xFF0F2847)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(Icons.history_rounded, color: AppColors.white, size: 20),
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        'Riwayat Skrining',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.white,
-                        ),
-                      ),
-                      const Spacer(),
-                      // Refresh button
-                      GestureDetector(
-                        onTap: _loadHistory,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppColors.white.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.refresh_rounded, color: AppColors.white, size: 20),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Pantau perkembangan hasil skrining Anda dari waktu ke waktu.',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 13,
-                      color: AppColors.white.withValues(alpha: 0.75),
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+      backgroundColor: AppColors.white,
+      foregroundColor: AppColors.textDark,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      centerTitle: true,
+      leading: IconButton(
+        onPressed: () => Navigator.of(context).maybePop(),
+        icon: const Icon(Icons.chevron_left_rounded, size: 28),
+        tooltip: 'Kembali',
+      ),
+      title: const Text(
+        'Riwayat Skrining',
+        style: TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textDark,
         ),
       ),
+      actions: [
+        IconButton(
+          onPressed: _loadHistory,
+          icon: const Icon(Icons.refresh_rounded),
+          tooltip: 'Refresh',
+        ),
+        const SizedBox(width: 6),
+      ],
     );
   }
 
@@ -336,7 +296,13 @@ class _HistoryScreenState extends State<HistoryScreen>
           borderRadius: BorderRadius.circular(16),
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
-            onTap: () {},
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => HistoryDetailScreen(history: item),
+                ),
+              );
+            },
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
