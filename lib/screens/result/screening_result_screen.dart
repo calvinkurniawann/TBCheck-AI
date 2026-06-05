@@ -99,14 +99,10 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen>
 
   Widget _buildAppBar() {
     return SliverAppBar(
-      expandedHeight: 120,
+      expandedHeight: 80,
       floating: false,
       pinned: true,
       backgroundColor: AppColors.primaryDarkBlue,
-      leading: IconButton(
-        icon: const Icon(Icons.close_rounded, color: AppColors.white),
-            onPressed: () => Navigator.of(context).popUntil(ModalRoute.withName('/home')),
-      ),
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: const BoxDecoration(
@@ -118,7 +114,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen>
           ),
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(56, 14, 20, 20),
+              padding: const EdgeInsets.fromLTRB(35, 0, 20, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,

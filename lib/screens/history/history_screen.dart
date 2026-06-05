@@ -136,7 +136,7 @@ class _HistoryScreenState extends State<HistoryScreen>
           icon: const Icon(Icons.refresh_rounded),
           tooltip: 'Refresh',
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 8),
       ],
     );
   }
