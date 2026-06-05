@@ -8,6 +8,7 @@ class ScreeningHistory {
   final String id;
   final DateTime date;
   final RiskLevel riskLevel;
+  final double cfScoreRaw;
   final double riskScore;
   final int gejalaTerdeteksi;
   final int faktorRisiko;
@@ -17,13 +18,14 @@ class ScreeningHistory {
     required this.id,
     required this.date,
     required this.riskLevel,
+    required this.cfScoreRaw,
     required this.riskScore,
     required this.gejalaTerdeteksi,
     required this.faktorRisiko,
     this.selectedSymptoms,
   });
 
-  /// Create from API response item
+  /// Create from Supabase row item
   factory ScreeningHistory.fromApi(ScreeningHistoryItem item) {
     RiskLevel level;
     switch (item.riskLevel) {
@@ -41,6 +43,7 @@ class ScreeningHistory {
       id: item.id.toString(),
       date: item.createdAt,
       riskLevel: level,
+      cfScoreRaw: item.cfScoreRaw,
       riskScore: item.cfScorePercentage,
       gejalaTerdeteksi: item.gejalaTerdeteksi,
       faktorRisiko: item.faktorRisiko,
@@ -110,6 +113,7 @@ class ScreeningHistory {
         id: '1',
         date: now.subtract(const Duration(days: 2)),
         riskLevel: RiskLevel.rendah,
+        cfScoreRaw: 0.1500,
         riskScore: 15.0,
         gejalaTerdeteksi: 1,
         faktorRisiko: 0,
@@ -118,6 +122,7 @@ class ScreeningHistory {
         id: '2',
         date: now.subtract(const Duration(days: 8)),
         riskLevel: RiskLevel.sedang,
+        cfScoreRaw: 0.4500,
         riskScore: 45.0,
         gejalaTerdeteksi: 3,
         faktorRisiko: 2,
@@ -126,6 +131,7 @@ class ScreeningHistory {
         id: '3',
         date: now.subtract(const Duration(days: 21)),
         riskLevel: RiskLevel.rendah,
+        cfScoreRaw: 0.1000,
         riskScore: 10.0,
         gejalaTerdeteksi: 0,
         faktorRisiko: 1,
@@ -134,6 +140,7 @@ class ScreeningHistory {
         id: '4',
         date: now.subtract(const Duration(days: 45)),
         riskLevel: RiskLevel.tinggi,
+        cfScoreRaw: 0.7800,
         riskScore: 78.0,
         gejalaTerdeteksi: 5,
         faktorRisiko: 3,

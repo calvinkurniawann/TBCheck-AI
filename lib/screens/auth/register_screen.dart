@@ -53,7 +53,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
         beratBadan: double.tryParse(_beratCtrl.text),
       );
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/home');
+      final isLoggedIn = await _authService.isLoggedIn();
+      if (!mounted) return;
+      if (isLoggedIn) {
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Akun dibuat. Silakan cek email untuk verifikasi, lalu login.'),
+            backgroundColor: Colors.blue,
+          ),
+        );
+        Navigator.pushReplacementNamed(context, '/login');
+      }
     } catch (e) {
       if (!mounted) return;
       _showError(e.toString());
@@ -112,7 +124,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   filled: true,
                   fillColor: AppColors.bgInput,
                 ),
-                value: _jenisKelamin,
+                initialValue: _jenisKelamin,
                 items: const [
                   DropdownMenuItem(value: 'Laki-laki', child: Text('Laki-laki')),
                   DropdownMenuItem(value: 'Perempuan', child: Text('Perempuan')),

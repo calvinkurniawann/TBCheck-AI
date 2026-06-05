@@ -1,10 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import '../constants/api_config.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Screening result returned from the backend API.
+import '../constants/supabase_config.dart';
+
+/// Screening result returned from Supabase RPC.
 class ScreeningResult {
   final double cfScoreRaw;
   final double cfScorePercentage;
@@ -20,15 +19,15 @@ class ScreeningResult {
 
   factory ScreeningResult.fromJson(Map<String, dynamic> json) {
     return ScreeningResult(
-      cfScoreRaw: (json['cf_score_raw'] as num).toDouble(),
-      cfScorePercentage: (json['cf_score_percentage'] as num).toDouble(),
-      riskLevel: json['risk_level'] as String,
-      aiAdvice: json['ai_advice'] as String,
+      cfScoreRaw: _toDouble(json['cf_score_raw']) ?? 0,
+      cfScorePercentage: _toDouble(json['cf_score_percentage']) ?? 0,
+      riskLevel: (json['risk_level'] as String?) ?? 'Rendah',
+      aiAdvice: (json['ai_advice'] as String?) ?? '',
     );
   }
 }
 
-/// History item returned from the backend API.
+/// History item returned from Supabase.
 class ScreeningHistoryItem {
   final int id;
   final List<String> selectedSymptoms;
@@ -47,13 +46,18 @@ class ScreeningHistoryItem {
   });
 
   factory ScreeningHistoryItem.fromJson(Map<String, dynamic> json) {
+    final rawSymptoms = json['selected_symptoms'];
+    final symptoms = rawSymptoms is List
+        ? rawSymptoms.map((item) => item.toString()).toList()
+        : <String>[];
+
     return ScreeningHistoryItem(
-      id: json['id'] as int,
-      selectedSymptoms: List<String>.from(json['selected_symptoms'] ?? []),
-      cfScoreRaw: (json['cf_score_raw'] as num).toDouble(),
-      cfScorePercentage: (json['cf_score_percentage'] as num).toDouble(),
-      riskLevel: json['risk_level'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      id: _toInt(json['id']) ?? 0,
+      selectedSymptoms: symptoms,
+      cfScoreRaw: _toDouble(json['cf_score_raw']) ?? 0,
+      cfScorePercentage: _toDouble(json['cf_score_percentage']) ?? 0,
+      riskLevel: _normalizeRiskLevel(json['risk_level']?.toString() ?? 'Rendah'),
+      createdAt: _toDateTime(json['created_at']) ?? DateTime.now(),
     );
   }
 
@@ -66,104 +70,132 @@ class ScreeningHistoryItem {
       selectedSymptoms.where((s) => s.startsWith('R') || s.startsWith('K')).length;
 }
 
-/// Service class handling all API communication with the Laravel backend.
+/// Service class handling screening calculation and history in Supabase.
 class ScreeningApiService {
-  final http.Client _client;
+  SupabaseClient get _client => Supabase.instance.client;
 
-  ScreeningApiService({http.Client? client}) : _client = client ?? http.Client();
-
-  Future<Map<String, String>> _authHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
-    return {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
-  }
-
-  /// Submit screening data to the backend for risk calculation.
+  /// Submit screening data to a Supabase RPC function.
   Future<ScreeningResult> submitScreening({
     required List<String> selectedSymptomCodes,
   }) async {
-    final uri = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.screeningCalculate}');
-    final headers = await _authHeaders();
-
-    debugPrint('[API] POST $uri');
-    debugPrint('[API] Symptoms: $selectedSymptomCodes');
+    debugPrint('[Supabase] RPC ${SupabaseConfig.screeningRpc}');
+    debugPrint('[Supabase] Symptoms: $selectedSymptomCodes');
 
     try {
-      final response = await _client.post(
-        uri,
-        headers: headers,
-        body: jsonEncode({
-          'selected_symptoms': selectedSymptomCodes,
-        }),
+      final response = await _client.rpc(
+        SupabaseConfig.screeningRpc,
+        params: {'selected_symptoms': selectedSymptomCodes},
       );
 
-      debugPrint('[API] Response ${response.statusCode}: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        if (json['success'] == true) {
-          return ScreeningResult.fromJson(json['data'] as Map<String, dynamic>);
-        }
-        throw ApiException('Server returned success=false');
-      } else {
+      final data = _extractResultData(response);
+      if (data == null) {
         throw ApiException(
-          'HTTP ${response.statusCode}: ${response.body}',
-          statusCode: response.statusCode,
+          'RPC ${SupabaseConfig.screeningRpc} tidak mengembalikan data hasil.',
         );
       }
+
+      final result = ScreeningResult.fromJson(data);
+      await _saveHistory(selectedSymptomCodes: selectedSymptomCodes, result: result);
+      return result;
     } catch (e) {
       if (e is ApiException) rethrow;
-      throw ApiException('Network error: $e');
+      throw ApiException(
+        'Gagal menghitung screening di Supabase: $e. Pastikan RPC "${SupabaseConfig.screeningRpc}" sudah dibuat.',
+      );
     }
   }
 
-  /// Fetch screening history for a user from the backend.
+  /// Fetch screening history for the current authenticated user.
   Future<List<ScreeningHistoryItem>> getHistory() async {
-    final uri = Uri.parse('${ApiConfig.baseUrl}/api/screening/history');
-    final headers = await _authHeaders();
+    final authUser = _client.auth.currentUser;
+    if (authUser == null) {
+      throw ApiException('Belum login');
+    }
 
-    debugPrint('[API] GET $uri');
+    debugPrint('[Supabase] GET ${SupabaseConfig.historyTable} for ${authUser.id}');
 
     try {
-      final response = await _client.get(
-        uri,
-        headers: headers,
-      );
+      final response = await _client
+          .from(SupabaseConfig.historyTable)
+          .select('id, selected_symptoms, cf_score_raw, cf_score_percentage, risk_level, created_at')
+          .eq('user_id', authUser.id)
+          .order('created_at', ascending: false);
 
-      debugPrint('[API] Response ${response.statusCode}: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        if (json['success'] == true) {
-          final list = json['data'] as List<dynamic>;
-          return list
-              .map((item) =>
-                  ScreeningHistoryItem.fromJson(item as Map<String, dynamic>))
-              .toList();
-        }
-        throw ApiException('Server returned success=false');
-      } else {
-        throw ApiException(
-          'HTTP ${response.statusCode}: ${response.body}',
-          statusCode: response.statusCode,
-        );
-      }
+      final rows = response as List<dynamic>;
+      return rows
+          .map((item) => ScreeningHistoryItem.fromJson(item as Map<String, dynamic>))
+          .toList();
     } catch (e) {
-      if (e is ApiException) rethrow;
-      throw ApiException('Network error: $e');
+      throw ApiException('Gagal memuat riwayat dari Supabase: $e');
     }
   }
 
-  void dispose() {
-    _client.close();
+  Future<void> _saveHistory({
+    required List<String> selectedSymptomCodes,
+    required ScreeningResult result,
+  }) async {
+    final authUser = _client.auth.currentUser;
+    if (authUser == null) {
+      return;
+    }
+
+    await _client.from(SupabaseConfig.historyTable).insert({
+      'user_id': authUser.id,
+      'selected_symptoms': selectedSymptomCodes,
+      'cf_score_raw': result.cfScoreRaw,
+      'cf_score_percentage': result.cfScorePercentage,
+      'risk_level': result.riskLevel,
+      'created_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+    });
   }
+
+  void dispose() {}
 }
 
-/// Custom exception for API errors.
+Map<String, dynamic>? _extractResultData(dynamic response) {
+  if (response is Map<String, dynamic>) {
+    if (response['data'] is Map<String, dynamic>) {
+      return response['data'] as Map<String, dynamic>;
+    }
+    return response;
+  }
+
+  if (response is List && response.isNotEmpty && response.first is Map<String, dynamic>) {
+    return response.first as Map<String, dynamic>;
+  }
+
+  return null;
+}
+
+int? _toInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value.toString());
+}
+
+double? _toDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is double) return value;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString());
+}
+
+DateTime? _toDateTime(dynamic value) {
+  if (value == null) return null;
+  if (value is DateTime) return value;
+  return DateTime.tryParse(value.toString());
+}
+
+String _normalizeRiskLevel(String value) {
+  final lower = value.toLowerCase();
+  if (lower == 'tinggi') return 'Tinggi';
+  if (lower == 'sedang') return 'Sedang';
+  return 'Rendah';
+}
+
+/// Custom exception for Supabase errors.
 class ApiException implements Exception {
   final String message;
   final int? statusCode;

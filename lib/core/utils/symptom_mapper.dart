@@ -1,6 +1,6 @@
 import '../../models/screening_data.dart';
 
-/// Maps the Flutter screening form data to the backend's symptom codes.
+/// Maps the Flutter screening form data to the screening engine's symptom codes.
 ///
 /// Backend uses codes like:
 /// - G01-G08: Gejala (symptoms)
@@ -8,7 +8,7 @@ import '../../models/screening_data.dart';
 /// - K01-K04: Komorbid / gaya hidup (lifestyle/comorbid)
 class SymptomMapper {
   /// Convert [ScreeningData] from the 4-step form into a flat list of
-  /// symptom codes that the backend's Certainty Factor engine expects.
+  /// symptom codes that the Supabase screening RPC expects.
   static List<String> mapToBackendCodes(ScreeningData data) {
     final codes = <String>[];
 
@@ -62,7 +62,7 @@ class SymptomMapper {
     return codes;
   }
 
-  /// Reverse map: translate backend code to human-readable Indonesian label.
+  /// Reverse map: translate code to human-readable Indonesian label.
   static String codeToLabel(String code) {
     const labels = {
       'G01': 'Batuk ≥ 3 minggu',
