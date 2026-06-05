@@ -4,7 +4,7 @@ import '../../core/constants/app_text_styles.dart';
 import '../../core/services/screening_api_service.dart';
 import '../../core/utils/symptom_mapper.dart';
 
-/// Screen displayed after the backend returns screening results.
+/// Screen displayed after Supabase returns screening results.
 /// Shows CF score, risk level, detected symptoms, and AI-generated advice.
 class ScreeningResultScreen extends StatefulWidget {
   final ScreeningResult result;

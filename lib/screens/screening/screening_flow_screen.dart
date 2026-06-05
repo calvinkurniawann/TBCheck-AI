@@ -129,11 +129,11 @@ class _ScreeningFlowScreenState extends State<ScreeningFlowScreen> {
     );
 
     try {
-      // Map the screening form data to backend codes
+      // Map the screening form data to Supabase-ready symptom codes
       final symptomCodes = SymptomMapper.mapToBackendCodes(_screeningData);
       debugPrint('Mapped symptoms: $symptomCodes');
 
-      // Call the backend API
+      // Call the Supabase RPC service
       final result = await _apiService.submitScreening(
         selectedSymptomCodes: symptomCodes,
       );
@@ -155,7 +155,7 @@ class _ScreeningFlowScreenState extends State<ScreeningFlowScreen> {
     } on ApiException catch (e) {
       if (!mounted) return;
       Navigator.of(context).pop(); // Dismiss loading
-      _showErrorDialog('Gagal terhubung ke server', e.message);
+      _showErrorDialog('Gagal terhubung ke Supabase', e.message);
     } catch (e) {
       if (!mounted) return;
       Navigator.of(context).pop(); // Dismiss loading

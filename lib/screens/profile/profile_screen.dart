@@ -17,7 +17,6 @@ class _ProfileScreenState extends State<ProfileScreen>
   late Animation<double> _fadeIn;
   final AuthService _authService = AuthService();
   UserData? _currentUser;
-  bool _isLoading = true;
 
   @override
   void initState() {
@@ -40,9 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         final user = await _authService.getSavedUser();
         setState(() => _currentUser = user);
       }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    } finally {}
   }
 
   Future<void> _logout() async {

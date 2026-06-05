@@ -1,12 +1,12 @@
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../constants/api_config.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// User model for the authenticated user.
 class UserData {
-  final int id;
+  final String id;
   final String name;
   final String email;
   final String? jenisKelamin;
@@ -26,17 +26,13 @@ class UserData {
 
   factory UserData.fromJson(Map<String, dynamic> json) {
     return UserData(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      email: json['email'] as String,
+      id: json['id']?.toString() ?? '',
+      name: (json['name'] as String?) ?? '',
+      email: (json['email'] as String?) ?? '',
       jenisKelamin: json['jenis_kelamin'] as String?,
-      usia: json['usia'] as int?,
-      tinggiBadan: json['tinggi_badan'] != null
-          ? (json['tinggi_badan'] as num).toDouble()
-          : null,
-      beratBadan: json['berat_badan'] != null
-          ? (json['berat_badan'] as num).toDouble()
-          : null,
+      usia: _toInt(json['usia']),
+      tinggiBadan: _toDouble(json['tinggi_badan']),
+      beratBadan: _toDouble(json['berat_badan']),
     );
   }
 
@@ -59,56 +55,47 @@ class UserData {
   }
 }
 
-/// Service for authentication: login, register, profile management.
-/// Stores token + user data in SharedPreferences.
+/// Service for authentication and local profile caching via Supabase Auth.
 class AuthService {
-  static const _tokenKey = 'auth_token';
-  static const _userKey = 'auth_user';
+  static const _cachedUserKey = 'cached_user';
 
-  final http.Client _client;
-
-  AuthService({http.Client? client}) : _client = client ?? http.Client();
-
-  // ─── Token Management ───
+  SupabaseClient get _client => Supabase.instance.client;
 
   Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
+    return _client.auth.currentSession?.accessToken;
   }
 
-  Future<void> _saveAuth(String token, UserData user) async {
+  Future<void> _cacheUser(UserData user) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
-    await prefs.setString(_userKey, jsonEncode(user.toJson()));
+    await prefs.setString(_cachedUserKey, jsonEncode(user.toJson()));
   }
 
   Future<void> clearAuth() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_userKey);
+    await prefs.remove(_cachedUserKey);
   }
 
   Future<bool> isLoggedIn() async {
-    final token = await getToken();
-    return token != null && token.isNotEmpty;
+    return _client.auth.currentSession != null;
   }
 
   Future<UserData?> getSavedUser() async {
+    final currentUser = _client.auth.currentUser;
+    if (currentUser != null) {
+      final user = _fromSupabaseUser(currentUser);
+      if (user != null) {
+        await _cacheUser(user);
+        return user;
+      }
+    }
+
     final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString(_userKey);
+    final userJson = prefs.getString(_cachedUserKey);
     if (userJson != null) {
       return UserData.fromJson(jsonDecode(userJson) as Map<String, dynamic>);
     }
     return null;
   }
-
-  Map<String, String> _authHeaders(String token) => {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
-
-  // ─── Register ───
 
   Future<UserData> register({
     required String name,
@@ -120,138 +107,154 @@ class AuthService {
     double? tinggiBadan,
     double? beratBadan,
   }) async {
-    final uri = Uri.parse('${ApiConfig.baseUrl}/api/register');
-    debugPrint('[Auth] POST $uri');
+    debugPrint('[Auth] Supabase sign up: $email');
+
+    if (password != passwordConfirmation) {
+      throw AuthException('Password tidak cocok');
+    }
 
     try {
-      final body = {
-        'name': name,
-        'email': email,
-        'password': password,
-        'password_confirmation': passwordConfirmation,
-        if (jenisKelamin != null) 'jenis_kelamin': jenisKelamin,
-        if (usia != null) 'usia': usia,
-        if (tinggiBadan != null) 'tinggi_badan': tinggiBadan,
-        if (beratBadan != null) 'berat_badan': beratBadan,
-      };
-
-      final response = await _client.post(
-        uri,
-        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
-        body: jsonEncode(body),
+      final response = await _client.auth.signUp(
+        email: email,
+        password: password,
+        data: {
+          'name': name,
+          'jenis_kelamin': jenisKelamin,
+          'usia': usia,
+          'tinggi_badan': tinggiBadan,
+          'berat_badan': beratBadan,
+        }..removeWhere((key, value) => value == null),
       );
 
-      debugPrint('[Auth] Response ${response.statusCode}: ${response.body}');
-
-      if (response.statusCode == 201) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        final data = json['data'] as Map<String, dynamic>;
-        final user = UserData.fromJson(data['user'] as Map<String, dynamic>);
-        final token = data['token'] as String;
-        await _saveAuth(token, user);
-        return user;
-      } else if (response.statusCode == 422) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        final errors = json['errors'] as Map<String, dynamic>?;
-        if (errors != null) {
-          final firstError = (errors.values.first as List).first as String;
-          throw AuthException(firstError);
-        }
-        throw AuthException(json['message'] as String? ?? 'Validasi gagal');
-      } else {
-        throw AuthException('Registrasi gagal (${response.statusCode})');
+      final authUser = response.user;
+      if (authUser == null) {
+        throw AuthException('Registrasi gagal');
       }
+
+      final user = _fromSupabaseUser(authUser) ??
+          UserData(
+            id: authUser.id,
+            name: name,
+            email: email,
+            jenisKelamin: jenisKelamin,
+            usia: usia,
+            tinggiBadan: tinggiBadan,
+            beratBadan: beratBadan,
+          );
+      await _cacheUser(user);
+      return user;
+    } on AuthException {
+      rethrow;
     } catch (e) {
-      if (e is AuthException) rethrow;
-      throw AuthException('Gagal terhubung ke server: $e');
+      throw AuthException(_mapSupabaseAuthError(e, action: 'Registrasi'));
     }
   }
-
-  // ─── Login ───
 
   Future<UserData> login({
     required String email,
     required String password,
   }) async {
-    final uri = Uri.parse('${ApiConfig.baseUrl}/api/login');
-    debugPrint('[Auth] POST $uri');
+    debugPrint('[Auth] Supabase sign in: $email');
 
     try {
-      final response = await _client.post(
-        uri,
-        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
+      final response = await _client.auth.signInWithPassword(
+        email: email,
+        password: password,
       );
 
-      debugPrint('[Auth] Response ${response.statusCode}: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        final data = json['data'] as Map<String, dynamic>;
-        final user = UserData.fromJson(data['user'] as Map<String, dynamic>);
-        final token = data['token'] as String;
-        await _saveAuth(token, user);
-        return user;
-      } else if (response.statusCode == 422) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        final errors = json['errors'] as Map<String, dynamic>?;
-        if (errors != null) {
-          final firstError = (errors.values.first as List).first as String;
-          throw AuthException(firstError);
-        }
-        throw AuthException(json['message'] as String? ?? 'Login gagal');
-      } else {
-        throw AuthException('Login gagal (${response.statusCode})');
+      final authUser = response.user;
+      if (authUser == null) {
+        throw AuthException('Login gagal');
       }
+
+      final user = _fromSupabaseUser(authUser) ??
+          UserData(
+            id: authUser.id,
+            name: authUser.email?.split('@').first ?? 'Pengguna',
+            email: authUser.email ?? email,
+          );
+      await _cacheUser(user);
+      return user;
+    } on AuthException {
+      rethrow;
     } catch (e) {
-      if (e is AuthException) rethrow;
-      throw AuthException('Gagal terhubung ke server: $e');
+      throw AuthException(_mapSupabaseAuthError(e, action: 'Login'));
     }
   }
 
-  // ─── Logout ───
-
   Future<void> logout() async {
-    final token = await getToken();
-    if (token != null) {
-      try {
-        await _client.post(
-          Uri.parse('${ApiConfig.baseUrl}/api/logout'),
-          headers: _authHeaders(token),
-        );
-      } catch (_) {
-        // Ignore network errors during logout
-      }
+    try {
+      await _client.auth.signOut();
+    } catch (_) {
+      // Ignore sign-out failures and clear local cache anyway.
     }
     await clearAuth();
   }
 
-  // ─── Profile ───
-
   Future<UserData> getProfile() async {
-    final token = await getToken();
-    if (token == null) throw AuthException('Belum login');
-
-    final uri = Uri.parse('${ApiConfig.baseUrl}/api/profile');
-    final response = await _client.get(uri, headers: _authHeaders(token));
-
-    if (response.statusCode == 200) {
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-      final user = UserData.fromJson(json['data'] as Map<String, dynamic>);
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_userKey, jsonEncode(user.toJson()));
-      return user;
-    } else if (response.statusCode == 401) {
-      await clearAuth();
-      throw AuthException('Sesi telah berakhir, silakan login ulang');
-    } else {
-      throw AuthException('Gagal memuat profil');
+    final currentUser = _client.auth.currentUser;
+    if (currentUser == null) {
+      throw AuthException('Belum login');
     }
+
+    final user = _fromSupabaseUser(currentUser);
+    if (user == null) {
+      throw AuthException('Profil pengguna tidak ditemukan');
+    }
+
+    await _cacheUser(user);
+    return user;
   }
 
-  void dispose() {
-    _client.close();
+  UserData? _fromSupabaseUser(User user) {
+    final metadata = user.userMetadata ?? const <String, dynamic>{};
+    final email = user.email ?? '';
+    if (user.id.isEmpty && email.isEmpty) return null;
+
+    return UserData(
+      id: user.id,
+      name: (metadata['name'] as String?) ?? email.split('@').first,
+      email: email,
+      jenisKelamin: metadata['jenis_kelamin'] as String?,
+      usia: _toInt(metadata['usia']),
+      tinggiBadan: _toDouble(metadata['tinggi_badan']),
+      beratBadan: _toDouble(metadata['berat_badan']),
+    );
   }
+}
+
+String _mapSupabaseAuthError(Object error, {required String action}) {
+  final message = error.toString().toLowerCase();
+
+  if (message.contains('email not confirmed') ||
+      message.contains('email_not_confirmed')) {
+    return 'Email belum dikonfirmasi. Cek inbox/spam untuk link verifikasi.';
+  }
+
+  if (message.contains('invalid login credentials') ||
+      message.contains('invalid_credentials')) {
+    return 'Email atau password salah.';
+  }
+
+  if (message.contains('user not found') || message.contains('user_not_found')) {
+    return 'Akun tidak ditemukan. Silakan daftar dulu.';
+  }
+
+  return '$action gagal: $error';
+}
+
+int? _toInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value.toString());
+}
+
+double? _toDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is double) return value;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString());
 }
 
 class AuthException implements Exception {

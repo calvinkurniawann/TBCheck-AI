@@ -157,7 +157,7 @@ class HistoryDetailScreen extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.white.withOpacity(0.18),
+                        color: AppColors.white.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(

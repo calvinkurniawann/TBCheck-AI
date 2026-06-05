@@ -59,11 +59,11 @@ class _HistoryScreenState extends State<HistoryScreen>
       });
     } on ApiException catch (e) {
       if (!mounted) return;
-      debugPrint('[History] API Error: ${e.message}');
+      debugPrint('[History] Supabase Error: ${e.message}');
       setState(() {
         _errorMessage = e.message;
         _isLoading = false;
-        // Fallback to mock data if API fails
+        // Fallback to mock data if Supabase fails
         _histories = ScreeningHistory.mockData();
       });
     } catch (e) {
@@ -157,7 +157,7 @@ class _HistoryScreenState extends State<HistoryScreen>
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Tidak dapat terhubung ke server. Menampilkan data contoh.',
+                'Tidak dapat terhubung ke Supabase. Menampilkan data contoh.',
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 12,

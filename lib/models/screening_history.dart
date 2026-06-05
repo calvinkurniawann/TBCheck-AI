@@ -25,7 +25,7 @@ class ScreeningHistory {
     this.selectedSymptoms,
   });
 
-  /// Create from API response item
+  /// Create from Supabase row item
   factory ScreeningHistory.fromApi(ScreeningHistoryItem item) {
     RiskLevel level;
     switch (item.riskLevel) {
