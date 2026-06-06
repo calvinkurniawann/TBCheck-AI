@@ -208,7 +208,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen>
           ),
           const SizedBox(height: 12),
           Text(
-            'Persentase hasil di atas 60%. Kami sarankan segera mencari klinik atau rumah sakit terdekat untuk pemeriksaan lanjutan.',
+            'Persentase hasil di atas 40%. Kami sarankan segera mencari klinik atau rumah sakit terdekat untuk pemeriksaan lanjutan.',
             style: AppTextStyles.bodyRegular.copyWith(height: 1.6),
           ),
           const SizedBox(height: 16),
