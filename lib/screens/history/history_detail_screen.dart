@@ -3,6 +3,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/utils/symptom_mapper.dart';
 import '../../models/screening_history.dart';
+import '../clinic/clinic_screen.dart';
 
 class HistoryDetailScreen extends StatelessWidget {
   final ScreeningHistory history;
@@ -179,6 +180,75 @@ class HistoryDetailScreen extends StatelessWidget {
               ],
             ),
           ),
+          if (history.riskScore > 40.0) ...[
+            const SizedBox(height: 18),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: AppColors.riskHighBg.withValues(alpha: 0.22),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: AppColors.riskHigh.withValues(alpha: 0.25),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: const [
+                      Icon(
+                        Icons.local_hospital_rounded,
+                        color: AppColors.primaryDarkBlue,
+                        size: 18,
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Periksa Ke Klinik Terdekat',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Persentase hasil di atas 40%. Kami sarankan untuk menemukan klinik atau rumah sakit terdekat dan melakukan pemeriksaan lanjutan.',
+                    style: AppTextStyles.bodyRegular.copyWith(height: 1.6),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ClinicScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.local_hospital_rounded, size: 20),
+                      label: const Text('Cari Klinik Terdekat'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryDarkBlue,
+                        foregroundColor: AppColors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 18),
           Container(
             padding: const EdgeInsets.all(18),

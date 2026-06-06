@@ -91,18 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
               child: Column(
                 children: [
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.settings_outlined, color: AppColors.white, size: 20),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 20),
                   Container(
                     width: 80,
                     height: 80,

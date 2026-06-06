@@ -3,6 +3,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/services/screening_api_service.dart';
 import '../../core/utils/symptom_mapper.dart';
+import '../clinic/clinic_screen.dart';
 
 /// Screen displayed after Supabase returns screening results.
 /// Shows CF score, risk level, detected symptoms, and AI-generated advice.
@@ -146,6 +147,8 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen>
     );
   }
 
+  bool get _shouldSuggestClinic => widget.result.cfScorePercentage > 60.0;
+
   Widget _buildBody() {
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -154,6 +157,10 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen>
           _buildScoreCard(),
           const SizedBox(height: 20),
           _buildAiAdviceCard(),
+          if (_shouldSuggestClinic) ...[
+            const SizedBox(height: 20),
+            _buildClinicSuggestionCard(),
+          ],
           const SizedBox(height: 20),
           _buildSymptomsCard(),
           const SizedBox(height: 20),
@@ -161,6 +168,71 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen>
           const SizedBox(height: 24),
           _buildActionButtons(),
           const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClinicSuggestionCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.riskHighBg.withValues(alpha: 0.24),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.riskHigh.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Icon(
+                Icons.local_hospital_rounded,
+                size: 18,
+                color: AppColors.primaryDarkBlue,
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Periksa Ke Klinik Terdekat',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textDark,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Persentase hasil di atas 60%. Kami sarankan segera mencari klinik atau rumah sakit terdekat untuk pemeriksaan lanjutan.',
+            style: AppTextStyles.bodyRegular.copyWith(height: 1.6),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ClinicScreen()),
+                );
+              },
+              icon: const Icon(Icons.local_hospital_rounded, size: 20),
+              label: const Text('Cari Klinik Terdekat'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryDarkBlue,
+                foregroundColor: AppColors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -175,7 +247,10 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen>
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: _riskColor.withValues(alpha: 0.2), width: 2),
+          border: Border.all(
+            color: _riskColor.withValues(alpha: 0.2),
+            width: 2,
+          ),
           boxShadow: [
             BoxShadow(
               color: _riskColor.withValues(alpha: 0.1),
@@ -192,7 +267,10 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen>
               decoration: BoxDecoration(
                 color: _riskBgColor,
                 shape: BoxShape.circle,
-                border: Border.all(color: _riskColor.withValues(alpha: 0.2), width: 3),
+                border: Border.all(
+                  color: _riskColor.withValues(alpha: 0.2),
+                  width: 3,
+                ),
               ),
               child: Icon(_riskIcon, color: _riskColor, size: 36),
             ),
@@ -255,10 +333,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen>
             color: AppColors.textDark,
           ),
         ),
-        Text(
-          label,
-          style: AppTextStyles.caption,
-        ),
+        Text(label, style: AppTextStyles.caption),
       ],
     );
   }
@@ -293,7 +368,11 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen>
                   color: AppColors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.auto_awesome_rounded, size: 20, color: AppColors.white),
+                child: const Icon(
+                  Icons.auto_awesome_rounded,
+                  size: 20,
+                  color: AppColors.white,
+                ),
               ),
               const SizedBox(width: 10),
               const Text(
@@ -341,7 +420,9 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen>
 
   Widget _buildSymptomsCard() {
     final gejala = widget.symptomCodes.where((c) => c.startsWith('G')).toList();
-    final risiko = widget.symptomCodes.where((c) => c.startsWith('R') || c.startsWith('K')).toList();
+    final risiko = widget.symptomCodes
+        .where((c) => c.startsWith('R') || c.startsWith('K'))
+        .toList();
 
     return Container(
       width: double.infinity,
@@ -369,7 +450,11 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen>
                   color: AppColors.primaryDarkBlue.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.fact_check_rounded, size: 20, color: AppColors.primaryDarkBlue),
+                child: const Icon(
+                  Icons.fact_check_rounded,
+                  size: 20,
+                  color: AppColors.primaryDarkBlue,
+                ),
               ),
               const SizedBox(width: 10),
               Text(
@@ -380,11 +465,21 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen>
           ),
           if (gejala.isNotEmpty) ...[
             const SizedBox(height: 16),
-            _buildSymptomSection('Gejala', Icons.coronavirus_outlined, AppColors.riskHigh, gejala),
+            _buildSymptomSection(
+              'Gejala',
+              Icons.coronavirus_outlined,
+              AppColors.riskHigh,
+              gejala,
+            ),
           ],
           if (risiko.isNotEmpty) ...[
             const SizedBox(height: 14),
-            _buildSymptomSection('Faktor Risiko', Icons.shield_outlined, AppColors.riskMedium, risiko),
+            _buildSymptomSection(
+              'Faktor Risiko',
+              Icons.shield_outlined,
+              AppColors.riskMedium,
+              risiko,
+            ),
           ],
           if (widget.symptomCodes.isEmpty) ...[
             const SizedBox(height: 16),
@@ -400,7 +495,12 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen>
     );
   }
 
-  Widget _buildSymptomSection(String title, IconData icon, Color color, List<String> codes) {
+  Widget _buildSymptomSection(
+    String title,
+    IconData icon,
+    Color color,
+    List<String> codes,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -458,7 +558,11 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.primaryMediumBlue),
+          const Icon(
+            Icons.info_outline_rounded,
+            size: 18,
+            color: AppColors.primaryMediumBlue,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -481,16 +585,23 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen>
           width: double.infinity,
           height: 56,
           child: ElevatedButton.icon(
-                onPressed: () => Navigator.of(context).popUntil(ModalRoute.withName('/home')),
+            onPressed: () =>
+                Navigator.of(context).popUntil(ModalRoute.withName('/home')),
             icon: const Icon(Icons.home_rounded, size: 20),
             label: const Text(
               'Kembali ke Beranda',
-              style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryDarkBlue,
               foregroundColor: AppColors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+              ),
               elevation: 4,
             ),
           ),
@@ -507,12 +618,21 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen>
             icon: const Icon(Icons.replay_rounded, size: 20),
             label: const Text(
               'Skrining Ulang',
-              style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primaryDarkBlue,
-              side: const BorderSide(color: AppColors.primaryDarkBlue, width: 1.5),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+              side: const BorderSide(
+                color: AppColors.primaryDarkBlue,
+                width: 1.5,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+              ),
             ),
           ),
         ),

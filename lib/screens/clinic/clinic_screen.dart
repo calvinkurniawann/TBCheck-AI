@@ -180,6 +180,8 @@ class _ClinicScreenState extends State<ClinicScreen>
   }
 
   Widget _buildMapSection() {
+    final showBackButton = ModalRoute.of(context)?.canPop ?? false;
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.38,
       width: double.infinity,
@@ -193,7 +195,8 @@ class _ClinicScreenState extends State<ClinicScreen>
                   initialCenter: _userLocation!,
                   initialZoom: 14.0,
                   interactionOptions: const InteractionOptions(
-                    flags: InteractiveFlag.doubleTapZoom |
+                    flags:
+                        InteractiveFlag.doubleTapZoom |
                         InteractiveFlag.pinchZoom |
                         InteractiveFlag.drag,
                   ),
@@ -211,9 +214,7 @@ class _ClinicScreenState extends State<ClinicScreen>
               ),
             )
           else
-            Positioned.fill(
-              child: CustomPaint(painter: _GridPainter()),
-            ),
+            Positioned.fill(child: CustomPaint(painter: _GridPainter())),
           if (_userLocation == null && !_isLoading)
             Center(
               child: Column(
@@ -226,7 +227,9 @@ class _ClinicScreenState extends State<ClinicScreen>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primaryDarkBlue.withValues(alpha: 0.15),
+                          color: AppColors.primaryDarkBlue.withValues(
+                            alpha: 0.15,
+                          ),
                           blurRadius: 20,
                           offset: const Offset(0, 4),
                         ),
@@ -254,67 +257,105 @@ class _ClinicScreenState extends State<ClinicScreen>
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 12,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.search_rounded,
-                        color: AppColors.iconGray, size: 20),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        enabled: !_isLoading && _hospitals.isNotEmpty,
-                        decoration: InputDecoration(
-                          hintText: _isLoading
-                              ? 'Mencari klinik terdekat...'
-                              : 'Cari nama atau alamat...',
-                          hintStyle:
-                              AppTextStyles.caption.copyWith(fontSize: 14),
-                          border: InputBorder.none,
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 14),
+              child: Row(
+                children: [
+                  if (showBackButton)
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).maybePop(),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.08),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                        style: AppTextStyles.bodyMedium,
-                      ),
-                    ),
-                    if (_isLoading)
-                      const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
+                        child: const Icon(
+                          Icons.arrow_back_rounded,
                           color: AppColors.primaryDarkBlue,
-                        ),
-                      )
-                    else if (_searchQuery.isNotEmpty)
-                      GestureDetector(
-                        onTap: () {
-                          _searchController.clear();
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: AppColors.bgLightGray,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Icon(Icons.close_rounded,
-                              size: 16, color: AppColors.iconGray),
+                          size: 20,
                         ),
                       ),
-                  ],
-                ),
+                    ),
+                  if (showBackButton) const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 12,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.search_rounded,
+                            color: AppColors.iconGray,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              enabled: !_isLoading && _hospitals.isNotEmpty,
+                              decoration: InputDecoration(
+                                hintText: _isLoading
+                                    ? 'Mencari klinik terdekat...'
+                                    : 'Cari nama atau alamat...',
+                                hintStyle: AppTextStyles.caption.copyWith(
+                                  fontSize: 14,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                              ),
+                              style: AppTextStyles.bodyMedium,
+                            ),
+                          ),
+                          if (_isLoading)
+                            const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.primaryDarkBlue,
+                              ),
+                            )
+                          else if (_searchQuery.isNotEmpty)
+                            GestureDetector(
+                              onTap: () {
+                                _searchController.clear();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.bgLightGray,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Icon(
+                                  Icons.close_rounded,
+                                  size: 16,
+                                  color: AppColors.iconGray,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -336,8 +377,11 @@ class _ClinicScreenState extends State<ClinicScreen>
                     ),
                   ],
                 ),
-                child: const Icon(Icons.my_location_rounded,
-                    color: AppColors.primaryDarkBlue, size: 20),
+                child: const Icon(
+                  Icons.my_location_rounded,
+                  color: AppColors.primaryDarkBlue,
+                  size: 20,
+                ),
               ),
             ),
           ),
@@ -357,7 +401,9 @@ class _ClinicScreenState extends State<ClinicScreen>
           onTap: () => _showHospitalDetails(h),
           child: Container(
             decoration: BoxDecoration(
-              color: h.isDots ? AppColors.accentTeal : AppColors.primaryDarkBlue,
+              color: h.isDots
+                  ? AppColors.accentTeal
+                  : AppColors.primaryDarkBlue,
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.white, width: 2),
               boxShadow: [
@@ -368,8 +414,11 @@ class _ClinicScreenState extends State<ClinicScreen>
                 ),
               ],
             ),
-            child: const Icon(Icons.local_hospital_rounded,
-                color: AppColors.white, size: 18),
+            child: const Icon(
+              Icons.local_hospital_rounded,
+              color: AppColors.white,
+              size: 18,
+            ),
           ),
         ),
       );
@@ -414,15 +463,14 @@ class _ClinicScreenState extends State<ClinicScreen>
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      clinic.name,
-                      style: AppTextStyles.heading3,
-                    ),
+                    child: Text(clinic.name, style: AppTextStyles.heading3),
                   ),
                   if (clinic.isDots)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.accentTealLight,
                         borderRadius: BorderRadius.circular(8),
@@ -445,11 +493,13 @@ class _ClinicScreenState extends State<ClinicScreen>
               const SizedBox(height: 12),
               Row(
                 children: [
-                  const Icon(Icons.place_rounded,
-                      size: 16, color: AppColors.primaryMediumBlue),
+                  const Icon(
+                    Icons.place_rounded,
+                    size: 16,
+                    color: AppColors.primaryMediumBlue,
+                  ),
                   const SizedBox(width: 4),
-                  Text(clinic.distanceLabel,
-                      style: AppTextStyles.bodyMedium),
+                  Text(clinic.distanceLabel, style: AppTextStyles.bodyMedium),
                 ],
               ),
               const SizedBox(height: 16),
@@ -459,7 +509,10 @@ class _ClinicScreenState extends State<ClinicScreen>
                   onPressed: () {
                     Navigator.pop(context);
                     _openDirections(
-                        clinic.latitude, clinic.longitude, clinic.name);
+                      clinic.latitude,
+                      clinic.longitude,
+                      clinic.name,
+                    );
                   },
                   icon: const Icon(Icons.directions_rounded, size: 18),
                   label: const Text('Buka Rute'),
@@ -481,8 +534,9 @@ class _ClinicScreenState extends State<ClinicScreen>
   }
 
   Widget _buildBottomSheet() {
-    final displayCount =
-        _searchQuery.isEmpty ? _hospitals.length : _filteredHospitals.length;
+    final displayCount = _searchQuery.isEmpty
+        ? _hospitals.length
+        : _filteredHospitals.length;
 
     return Container(
       decoration: BoxDecoration(
@@ -515,8 +569,10 @@ class _ClinicScreenState extends State<ClinicScreen>
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Faskes Terdekat',
-                        style: AppTextStyles.heading3),
+                    const Text(
+                      'Faskes Terdekat',
+                      style: AppTextStyles.heading3,
+                    ),
                     const SizedBox(height: 2),
                     Text(
                       _isLoading
@@ -726,7 +782,9 @@ class _ClinicScreenState extends State<ClinicScreen>
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: clinic.isDots
                                   ? AppColors.accentTealLight
@@ -766,10 +824,15 @@ class _ClinicScreenState extends State<ClinicScreen>
                           const Spacer(),
                           GestureDetector(
                             onTap: () => _openDirections(
-                                clinic.latitude, clinic.longitude, clinic.name),
+                              clinic.latitude,
+                              clinic.longitude,
+                              clinic.name,
+                            ),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 6),
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.primaryLightBlue,
                                 borderRadius: BorderRadius.circular(8),
@@ -777,9 +840,11 @@ class _ClinicScreenState extends State<ClinicScreen>
                               child: const Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.directions_rounded,
-                                      size: 14,
-                                      color: AppColors.primaryDarkBlue),
+                                  Icon(
+                                    Icons.directions_rounded,
+                                    size: 14,
+                                    color: AppColors.primaryDarkBlue,
+                                  ),
                                   SizedBox(width: 4),
                                   Text(
                                     'Rute',
