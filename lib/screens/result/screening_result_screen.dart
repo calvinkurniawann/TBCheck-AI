@@ -147,7 +147,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen>
     );
   }
 
-  bool get _shouldSuggestClinic => widget.result.cfScorePercentage > 60.0;
+  bool get _shouldSuggestClinic => widget.result.cfScorePercentage > 40.0;
 
   Widget _buildBody() {
     return Padding(
