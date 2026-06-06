@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../home/home_screen.dart';
 import '../history/history_screen.dart';
-// import '../clinic/clinic_screen.dart';
+import '../clinic/clinic_screen.dart';
 import '../profile/profile_screen.dart';
 
 class MainNavScreen extends StatefulWidget {
@@ -15,13 +15,6 @@ class MainNavScreen extends StatefulWidget {
 class _MainNavScreenState extends State<MainNavScreen> {
   int _currentIndex = 0;
 
-
-
-  int get _adjustedIndex {
-    if (_currentIndex >= 1) return _currentIndex + 1;
-    return _currentIndex;
-  }
-
   Widget get _currentScreen {
     switch (_currentIndex) {
       case 0:
@@ -30,8 +23,8 @@ class _MainNavScreenState extends State<MainNavScreen> {
         );
       case 1:
         return const HistoryScreen();
-      // case 2:
-      //   return const ClinicScreen();
+      case 2:
+        return const ClinicScreen();
       case 3:
         return const ProfileScreen();
       default:
@@ -80,11 +73,11 @@ class _MainNavScreenState extends State<MainNavScreen> {
                 index: 0,
               ),
               _buildCenterNavItem(),
-              // _buildNavItem(
-              //   icon: Icons.local_hospital_rounded,
-              //   label: 'Klinik',
-              //   index: 2,
-              // ),
+              _buildNavItem(
+                icon: Icons.local_hospital_rounded,
+                label: 'Klinik',
+                index: 2,
+              ),
               _buildNavItem(
                 icon: Icons.person_rounded,
                 label: 'Profil',
@@ -102,19 +95,11 @@ class _MainNavScreenState extends State<MainNavScreen> {
     required String label,
     required int index,
   }) {
-    final isActive = _adjustedIndex == index;
+    final isActive = _currentIndex == index;
     final color = isActive ? AppColors.primaryDarkBlue : AppColors.iconGray;
 
     return GestureDetector(
-      onTap: () {
-        if (index == 0) {
-          setState(() => _currentIndex = 0);
-        } else if (index == 2) {
-          setState(() => _currentIndex = 2);
-        } else if (index == 3) {
-          setState(() => _currentIndex = 3);
-        }
-      },
+      onTap: () => setState(() => _currentIndex = index),
       behavior: HitTestBehavior.opaque,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
