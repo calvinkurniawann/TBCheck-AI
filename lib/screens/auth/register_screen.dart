@@ -19,7 +19,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _usiaCtrl = TextEditingController();
   final _tinggiCtrl = TextEditingController();
   final _beratCtrl = TextEditingController();
-  
+
   String? _jenisKelamin;
   final _authService = AuthService();
   bool _isLoading = false;
@@ -30,7 +30,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final password = _passwordCtrl.text;
     final confirmPassword = _confirmPasswordCtrl.text;
 
-    if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+    if (name.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
       _showError('Semua field wajib diisi');
       return;
     }
@@ -53,19 +56,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
         beratBadan: double.tryParse(_beratCtrl.text),
       );
       if (!mounted) return;
-      final isLoggedIn = await _authService.isLoggedIn();
+      await _authService.logout();
       if (!mounted) return;
-      if (isLoggedIn) {
-        Navigator.pushReplacementNamed(context, '/home');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Akun dibuat. Silakan cek email untuk verifikasi, lalu login.'),
-            backgroundColor: Colors.blue,
-          ),
-        );
-        Navigator.pushReplacementNamed(context, '/login');
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pendaftaran berhasil. Silakan login.'),
+          backgroundColor: Colors.blue,
+        ),
+      );
+      Navigator.pushReplacementNamed(context, '/login');
     } catch (e) {
       if (!mounted) return;
       _showError(e.toString());
@@ -97,7 +96,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               const Text(
                 'Buat Akun',
-                style: TextStyle(fontFamily: 'Poppins', fontSize: 24, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -105,29 +108,59 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 style: TextStyle(color: AppColors.textGray),
               ),
               const SizedBox(height: 32),
-              CustomTextField(controller: _nameCtrl, label: 'Nama Lengkap', hint: 'Masukkan nama Anda'),
+              CustomTextField(
+                controller: _nameCtrl,
+                label: 'Nama Lengkap',
+                hint: 'Masukkan nama Anda',
+              ),
               const SizedBox(height: 16),
-              CustomTextField(controller: _emailCtrl, label: 'Email', hint: 'Masukkan email valid', keyboardType: TextInputType.emailAddress),
+              CustomTextField(
+                controller: _emailCtrl,
+                label: 'Email',
+                hint: 'Masukkan email valid',
+                keyboardType: TextInputType.emailAddress,
+              ),
               const SizedBox(height: 16),
-              CustomTextField(controller: _passwordCtrl, label: 'Password', hint: 'Minimal 8 karakter', isPassword: true),
+              CustomTextField(
+                controller: _passwordCtrl,
+                label: 'Password',
+                hint: 'Minimal 8 karakter',
+                isPassword: true,
+              ),
               const SizedBox(height: 16),
-              CustomTextField(controller: _confirmPasswordCtrl, label: 'Konfirmasi Password', hint: 'Ulangi password', isPassword: true),
-              
+              CustomTextField(
+                controller: _confirmPasswordCtrl,
+                label: 'Konfirmasi Password',
+                hint: 'Ulangi password',
+                isPassword: true,
+              ),
+
               const SizedBox(height: 24),
-              const Text('Data Profil (Opsional - untuk autofill skrining)', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Data Profil (Opsional - untuk autofill skrining)',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 16),
-              
+
               DropdownButtonFormField<String>(
                 decoration: InputDecoration(
                   labelText: 'Jenis Kelamin',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   filled: true,
                   fillColor: AppColors.bgInput,
                 ),
                 initialValue: _jenisKelamin,
                 items: const [
-                  DropdownMenuItem(value: 'Laki-laki', child: Text('Laki-laki')),
-                  DropdownMenuItem(value: 'Perempuan', child: Text('Perempuan')),
+                  DropdownMenuItem(
+                    value: 'Laki-laki',
+                    child: Text('Laki-laki'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Perempuan',
+                    child: Text('Perempuan'),
+                  ),
                 ],
                 onChanged: (val) => setState(() => _jenisKelamin = val),
               ),
@@ -135,7 +168,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: CustomTextField(controller: _usiaCtrl, label: 'Usia (thn)', hint: 'Cth: 25', keyboardType: TextInputType.number),
+                    child: CustomTextField(
+                      controller: _usiaCtrl,
+                      label: 'Usia (thn)',
+                      hint: 'Cth: 25',
+                      keyboardType: TextInputType.number,
+                    ),
                   ),
                 ],
               ),
@@ -143,11 +181,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: CustomTextField(controller: _tinggiCtrl, label: 'Tinggi (cm)', hint: 'Cth: 170', keyboardType: TextInputType.number),
+                    child: CustomTextField(
+                      controller: _tinggiCtrl,
+                      label: 'Tinggi (cm)',
+                      hint: 'Cth: 170',
+                      keyboardType: TextInputType.number,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: CustomTextField(controller: _beratCtrl, label: 'Berat (kg)', hint: 'Cth: 65', keyboardType: TextInputType.number),
+                    child: CustomTextField(
+                      controller: _beratCtrl,
+                      label: 'Berat (kg)',
+                      hint: 'Cth: 65',
+                      keyboardType: TextInputType.number,
+                    ),
                   ),
                 ],
               ),
